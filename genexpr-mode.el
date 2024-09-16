@@ -95,11 +95,62 @@
     "in10" "in11" "in12" "in13" "in14" "in15" "in16" "in17" "in18" "in19"
     "out10" "out11" "out12" "out13" "out14" "out15" "out16" "out17" "out18" "out19"))
 
+(eval-when-compile
+  ;; Silence compilation warning about `compilation-error-regexp-alist' defined
+  ;; in compile.el.
+  (require 'compile))
+
+(eval-and-compile
+  (progn
+    ;; Emacs 27+ way of customizing rx
+    (defvar genexpr--rx-bindings)
+    (setq
+     genexpr--rx-bindings
+     `((symbol (&rest x) (seq symbol-start (or x) symbol-end))
+       (ws (* (any " \t")))
+       (ws+ (+ (any " \t")))
+       (wsn (* (any " \t\n")))
+
+       (genexpr-name (symbol (seq (+ (any alpha "_")) (* (any alnum "_")))))
+       (genexpr-number
+	(seq (or (seq (+ digit) (opt ".") (* digit))
+                 (seq (* digit) (opt ".") (+ digit)))
+             (opt (regexp "[eE][+-]?[0-9]+"))))
+       (genexpr-funcheader-with-up-to-8-variables
+	(seq bol (group-n 1 genexpr-name) ws "("
+	     (group-n 2 genexpr-name) ws
+             (? "," ws (group-n 3 genexpr-name) ws
+		(? "," ws (group-n 4 genexpr-name) ws
+		   (? "," ws (group-n 5 genexpr-name) ws
+                      (? "," ws (group-n 6 genexpr-name) ws
+			 (? "," ws (group-n 7 genexpr-name) ws
+                            (? "," ws (group-n 8 genexpr-name) ws
+                               (? "," ws (group-n 9 genexpr-name) ws)))))))
+	     ")" wsn "{"))))
+
+    (defmacro genexpr-rx (&rest regexps)
+      (eval `(rx-let ,genexpr--rx-bindings
+               (rx ,@regexps))))
+
+    (defun genexpr-rx-to-string (form &optional no-group)
+      (rx-let-eval genexpr--rx-bindings
+        (rx-to-string form no-group)))))
+
 (defun genexpr-font-lock-keywords ()
   (list
    `(,(regexp-opt genexpr--builtins 'symbols) . font-lock-builtin-face)
    `(,(regexp-opt genexpr--constants 'symbols) . font-lock-constant-face)
-   `(,(regexp-opt genexpr--keywords 'symbols) . font-lock-keyword-face)))
+   `(,(regexp-opt genexpr--keywords 'symbols) . font-lock-keyword-face)
+   `(,(genexpr-rx genexpr-funcheader-with-up-to-8-variables)
+     (1 font-lock-function-name-face)
+     (2 font-lock-variable-name-face)
+     (3 font-lock-variable-name-face nil noerror)
+     (4 font-lock-variable-name-face nil noerror)
+     (5 font-lock-variable-name-face nil noerror)
+     (6 font-lock-variable-name-face nil noerror)
+     (7 font-lock-variable-name-face nil noerror)
+     (8 font-lock-variable-name-face nil noerror)
+     (9 font-lock-variable-name-face nil noerror))))
 
 (defun genexpr--previous-non-empty-line ()
   (save-excursion
