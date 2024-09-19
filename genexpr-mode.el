@@ -1,9 +1,41 @@
-;;; genexpr-mode.el --- a major-mode for editing GenExpr files  -*- lexical-binding: t -*-
+;;; genexpr-mode.el --- Major mode for editing GenExpr files -*- lexical-binding: t; -*-
 
-;; modified from:
-;; simpc-mode: https://github.com/rexim/simpc-mode
-;; GenExprForSublime: https://github.com/emmanueljourdan/GenExprForSublime
-;; lua-mode: https://github.com/immerrr/lua-mode
+;; Author: Zhao Shenyang <dev@zsy.im>
+;;
+;; URL: https://github.com/larme/genexpr-mode
+;; Version: 0.1
+;; Package-Requires: ((emacs "27.1"))
+;;
+;; This file is NOT part of GNU Emacs.
+;;
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;; Keywords: languages, dsp
+
+;;; Commentary:
+
+;; This package provides a major mode for editing GenExpr files used in
+;; Max/MSP's gen~ object.  It includes syntax highlighting and indentation
+;; support for GenExpr code.
+
+;; To use this mode, simply open a .genexpr file or add the following to
+;; your Emacs configuration:
+
+;; (require 'genexpr-mode)
+;; (add-to-list 'auto-mode-alist '("\\.genexpr\\'" . genexpr-mode))
+
+;;; Code:
 
 (require 'subr-x)
 
@@ -223,3 +255,5 @@
 (add-to-list 'auto-mode-alist '("\\.genexpr\\'" . genexpr-mode))
 
 (provide 'genexpr-mode)
+
+;;; genexpr-mode.el ends here
