@@ -1,6 +1,6 @@
 # genexpr-mode
 
-An Emacs major mode for editing GenExpr files used in [Max/MSP's gen~](http://cycling74.com/products/gen/) object.
+An Emacs major mode for editing [GenExpr](https://docs.cycling74.com/max8/vignettes/gen_genexpr) files used in [Max/MSP's gen~](https://docs.cycling74.com/max8/vignettes/gen_overview) object.
 
 ## Features
 
