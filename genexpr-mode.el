@@ -63,22 +63,22 @@
                 #'genexpr-electric-match))
             genexpr--electric-indent-chars))
     result-map)
-  "Keymap used in genexpr-mode buffers.")
+  "Keymap used in `genexpr-mode' buffers.")
+
+(defvar genexpr-electric-flag t
+  "Non-nil means allow electric actions.
+
+Non-nil means electric actions (like automatic reindentation) will happen when an electric key like `{' is pressed.")
+(make-variable-buffer-local 'genexpr-electric-flag)
 
 (defun genexpr-electric-match (arg)
-  "Insert character and adjust indentation."
+  "Insert character (ARG) and adjust indentation."
   (interactive "P")
   (let (blink-paren-function)
     (self-insert-command (prefix-numeric-value arg)))
   (if genexpr-electric-flag
       (genexpr-indent-line))
   (blink-matching-open))
-
-
-(defvar genexpr-electric-flag t
-  "If t, electric actions (like automatic reindentation) will happen when an electric
- key like `{' is pressed")
-(make-variable-buffer-local 'genexpr-electric-flag)
 
 (defvar genexpr-mode-syntax-table
   (let ((table (make-syntax-table)))
@@ -169,6 +169,7 @@
         (rx-to-string form no-group)))))
 
 (defun genexpr-font-lock-keywords ()
+  "Font locking keywords."
   (list
    `(,(regexp-opt genexpr--builtins 'symbols) . font-lock-builtin-face)
    `(,(regexp-opt genexpr--constants 'symbols) . font-lock-constant-face)
@@ -185,6 +186,7 @@
      (9 font-lock-variable-name-face nil noerror))))
 
 (defun genexpr--previous-non-empty-line ()
+  "Find previous non empty line."
   (save-excursion
     (forward-line -1)
     (while (and (not (bobp))
@@ -195,6 +197,7 @@
     (thing-at-point 'line t)))
 
 (defun genexpr--indentation-of-previous-non-empty-line ()
+  "Get previous non-empty line's indentation."
   (save-excursion
     (forward-line -1)
     (while (and (not (bobp))
@@ -205,6 +208,7 @@
     (current-indentation)))
 
 (defun genexpr--desired-indentation ()
+  "Return desired indentation."
   (let* ((cur-line (string-trim-right (thing-at-point 'line t)))
          (prev-line (string-trim-right (genexpr--previous-non-empty-line)))
          (indent-len genexpr-indent-level)
@@ -229,6 +233,7 @@
 
 ;;; TODO: customizable indentation (amount of spaces, tabs, etc)
 (defun genexpr-indent-line ()
+  "Indent line accordingly in GenExpr mode."
   (interactive)
   (when (not (bobp))
     (let* ((desired-indentation
@@ -243,7 +248,7 @@
   :syntax-table genexpr-mode-syntax-table
   :group 'genexpr
   (setq-local font-lock-defaults '(genexpr-font-lock-keywords))
-  (setq-local indent-line-function 'genexpr-indent-line)
+  (setq-local indent-line-function #'genexpr-indent-line)
   (setq-local comment-start "// ")
   (when (boundp 'electric-indent-chars)
     ;; If electric-indent-chars is not defined, electric indentation is done
