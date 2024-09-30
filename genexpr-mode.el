@@ -65,10 +65,11 @@
     result-map)
   "Keymap used in `genexpr-mode' buffers.")
 
-(defvar genexpr-electric-flag t
+(defvar-local genexpr-electric-flag t
   "Non-nil means allow electric actions.
 
-Non-nil means electric actions (like automatic reindentation) will happen when an electric key like `{' is pressed.")
+Non-nil means electric actions (like automatic reindentation)
+will happen when an electric key like `{' is pressed.")
 (make-variable-buffer-local 'genexpr-electric-flag)
 
 (defun genexpr-electric-match (arg)
