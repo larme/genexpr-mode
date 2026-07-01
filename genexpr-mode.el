@@ -149,17 +149,8 @@ will happen when an electric key like `{' is pressed.")
 	(seq (or (seq (+ digit) (opt ".") (* digit))
                  (seq (* digit) (opt ".") (+ digit)))
              (opt (regexp "[eE][+-]?[0-9]+"))))
-       (genexpr-funcheader-with-up-to-8-variables
-	(seq bol (group-n 1 genexpr-name) ws "("
-	     (group-n 2 genexpr-name) ws
-             (? "," ws (group-n 3 genexpr-name) ws
-		(? "," ws (group-n 4 genexpr-name) ws
-		   (? "," ws (group-n 5 genexpr-name) ws
-                      (? "," ws (group-n 6 genexpr-name) ws
-			 (? "," ws (group-n 7 genexpr-name) ws
-                            (? "," ws (group-n 8 genexpr-name) ws
-                               (? "," ws (group-n 9 genexpr-name) ws)))))))
-	     ")" wsn "{"))))
+       (genexpr-funcheader
+        (seq bol ws (group-n 1 genexpr-name) ws "(" (* (not (any "\n"))) ")" wsn "{"))))
 
     (defmacro genexpr-rx (&rest regexps)
       (eval `(rx-let ,genexpr--rx-bindings
@@ -169,51 +160,43 @@ will happen when an electric key like `{' is pressed.")
       (rx-let-eval genexpr--rx-bindings
         (rx-to-string form no-group)))))
 
+(defconst genexpr--function-header-regexp
+  (genexpr-rx genexpr-funcheader)
+  "Regexp matching a GenExpr function header line.")
+
 (defun genexpr-font-lock-keywords ()
   "Font locking keywords."
   (list
    `(,(regexp-opt genexpr--builtins 'symbols) . font-lock-builtin-face)
    `(,(regexp-opt genexpr--constants 'symbols) . font-lock-constant-face)
    `(,(regexp-opt genexpr--keywords 'symbols) . font-lock-keyword-face)
-   `(,(genexpr-rx genexpr-funcheader-with-up-to-8-variables)
-     (1 font-lock-function-name-face)
-     (2 font-lock-variable-name-face)
-     (3 font-lock-variable-name-face nil noerror)
-     (4 font-lock-variable-name-face nil noerror)
-     (5 font-lock-variable-name-face nil noerror)
-     (6 font-lock-variable-name-face nil noerror)
-     (7 font-lock-variable-name-face nil noerror)
-     (8 font-lock-variable-name-face nil noerror)
-     (9 font-lock-variable-name-face nil noerror))))
+   `(,genexpr--function-header-regexp (1 font-lock-function-name-face))))
 
-(defun genexpr--previous-non-empty-line ()
-  "Find previous non empty line."
+(defun genexpr--previous-non-empty-line-info ()
+  "Return previous non-empty line text and indentation.
+
+The return value is a cons cell of the form (LINE . INDENT)."
   (save-excursion
     (forward-line -1)
     (while (and (not (bobp))
-                (string-empty-p
-                 (string-trim-right
-                  (thing-at-point 'line t))))
+                (looking-at-p "[ \t]*$"))
       (forward-line -1))
-    (thing-at-point 'line t)))
-
-(defun genexpr--indentation-of-previous-non-empty-line ()
-  "Get previous non-empty line's indentation."
-  (save-excursion
-    (forward-line -1)
-    (while (and (not (bobp))
-                (string-empty-p
-                 (string-trim-right
-                  (thing-at-point 'line t))))
-      (forward-line -1))
-    (current-indentation)))
+    (cons (string-trim-right
+           (buffer-substring-no-properties
+            (line-beginning-position)
+            (line-end-position)))
+          (current-indentation))))
 
 (defun genexpr--desired-indentation ()
   "Return desired indentation."
-  (let* ((cur-line (string-trim-right (thing-at-point 'line t)))
-         (prev-line (string-trim-right (genexpr--previous-non-empty-line)))
+  (let* ((cur-line (string-trim-right
+                    (buffer-substring-no-properties
+                     (line-beginning-position)
+                     (line-end-position))))
+         (prev-info (genexpr--previous-non-empty-line-info))
+         (prev-line (car prev-info))
          (indent-len genexpr-indent-level)
-         (prev-indent (genexpr--indentation-of-previous-non-empty-line)))
+         (prev-indent (cdr prev-info)))
     (cond
      ((string-match-p "^\\s-*switch\\s-*(.+)" prev-line)
       prev-indent)
